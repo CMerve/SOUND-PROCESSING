@@ -1,0 +1,68 @@
+"""
+
+- N/m kare basıncın birimidir.
+- üst yüzeyi açık olan bir sıvının h derinliğindeki P basıncı, atmosfer basıncından basıncın derinlikle
+değişimi pgh miktarı kadar büyüktür.
+- P0= 1 atm=1,013x10 üzeri 5 Pa dır. suyun dışındaki basıncı temsil eder sabit olarak bu değer kullanılır.
+- Basınç her 10 metrede 1 atmosfer artar. 10.000 metrede, 1000 atmosfer civarında basınç vardır.
+bu hesaba göre 1 metrede 0,1 amt olur
+- yoğunluğun sabit 1000 olduğu varsayılır birimi kg/m küp
+
+***********************************************************************************************************
+BU KOD SUYUN ALTINDA DOPPLER DENKLEMİNİN UYGULANMASIYLA CİSMİN HAREKETİNİ YAKLAŞAN/VEYA HAREKET OLARAK ADLANDIRIR
+"""
+
+import math
+import soundfile
+
+def pressCalculate(meters):
+        
+        #deriniliğe göre basınç bulma (hacim(bulk) modülü) 
+        deep = ( meters % 10 )
+        P0 = ( 1.013 ) * 100000
+        pgh = deep
+        P = P0 + pgh
+        print ( '{} {}'.format( P, 'N/mkare basınca sahip' ))
+        return P,meters
+ 
+def soundSpeedCalculate(pr):
+        press,meters =pressCalculate(pr)
+        consistency=1000
+        Vwater = press/consistency
+        math.sqrt(Vwater)
+        print ( '{} {} {} {} '.format( meters, 'derinlikte suda ki ses hızı : ' , Vwater, 'km/s ' ))
+        return Vwater
+
+def dopler(Vobserver,Vsource,deep,filePath):  
+        frequency=openWav(filePath)
+        Venv = soundSpeedCalculate(deep)
+        #birbirine doğru hareket ediyorsa
+        a=(Venv + Vobserver)/(Venv - Vsource)
+        comigIf=a*frequency
+        print('{} {} {}'.format('yaklaşırken alınması gereken frekans : ' ,comigIf, 'Hz'))              
+        #birbirinden uzaklaşan hareket varsa
+        b=(Venv - Vobserver)/(Venv + Vsource)
+        away=b*frequency
+        print('{} {} {}'.format('uzaklaşırken alınması gereken frekans : ' ,away, 'Hz'))
+        com=compare(frequency, comigIf, away)
+        if com==True: print('yaklaşan hareket')
+        else: print('uzaklaşan hareket tespit edildi')
+        
+                
+def openWav(filePath):
+        audio_samples,sample_rate=soundfile.read(filePath,dtype='int16')
+        #sample_rate ses dosyasının frekansını verir mono ses dosyaları için
+        print('{} {} {}'.format( 'wav dosyasından okunan frekans : ' , sample_rate,'Hz'))
+        return sample_rate
+   
+def compare(realF, comingF, awayF):
+        c=abs(awayF-realF)
+        d=abs(comingF-realF)
+        if d<c:
+                return True              
+        elif c<d:
+                return False
+        
+
+#gözlemci hızı, kaynak hızı, su altındaki basınç ve algılanan ses dosyası fonksiyona verilir                           
+dopler(50,100,5000,'output8.wav')
